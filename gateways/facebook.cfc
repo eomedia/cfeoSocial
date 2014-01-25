@@ -163,9 +163,6 @@ component accessors="true" output="false" {
 
       	} // end switch
 
-      	// FaceBook passes token as part of URL string (determine if we use & or ?)
-      	//st.token = (findNoCase("?", st.url) ? "&access_token=" : "?access_token=") ;
-
 
 /* VALIDATION CHECKS */
 
