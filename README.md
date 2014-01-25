@@ -24,7 +24,7 @@ NOTE:  We utilize some CF10 specific code like arrayEach so if you're using an e
 
 The goal of the project is to provide a general framework and jumpstart to integrating your application with social media sites using the OAuth2 authentication.  If there turns out to be more interest we'll work on cleaning up the project with more formal documentation and features, otherwise it's just what it is.
 
-## Gateways (CFCs)
+### Gateways (CFCs)
 Facebook, Google, LinkedIn
 
 Each component has an init() method which takes three parameters (apiKey,apiSecret,redirectURL) which will initialize the component with the basic information required for Authentication.
@@ -36,9 +36,9 @@ Read Ray Camdens 3 part blog about setting up applications & OAuth to learn more
  - http://www.raymondcamden.com/index.cfm/2013/4/3/ColdFusion-and-OAuth-Part-2--Facebook
  - http://www.raymondcamden.com/index.cfm/2013/4/17/ColdFusion-and-OAuth-Part-3--Google
 
- redirectURL = the OAuth.cfm file included in this project (wherever that fits within your website framework)
+redirectURL = the OAuth.cfm file included in this project (wherever that fits within yor website framework)
 
-# Methods
+### Methods
 
 Each method you create is handled within the invokeAPIService switch options and allows you to set simple values as shown;
 ```
@@ -50,14 +50,13 @@ st.customURL=[]; Custom url variables added to method (e.g. urlParameter:paramet
 Each gateway includes a few example methods to help understand how things work.
 ```
 
-##Testing (CFMs)
+### Testing (CFMs)
 Facebook, Google, LinkedIn
 
 These pages provide your basic authentication workflow and test calls of the social media gateways.
 
 
-
-## License
+### License
 ```
 Copyright (c) 2013
 
