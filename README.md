@@ -18,7 +18,6 @@ cfeoSocial is a set of gateways/test pages to integrate with Social Media APIs (
 
 ```
 
-```
 ### Using the files
 
 NOTE:  We utilize some CF10 specific code like arrayEach so if you're using an earlier version of CF you may need to refactor to use CFLOOP or other compatible coding.
@@ -56,10 +55,11 @@ Facebook, Google, LinkedIn
 These pages provide your basic authentication workflow and test calls of the social media gateways.
 
 
-```
-
 
 ##License
+```
 Copyright (c) 2013
 
 Emerald Oceans Media Group, Inc. (eoMedia Group)
+
+```
