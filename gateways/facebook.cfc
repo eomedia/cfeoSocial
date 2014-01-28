@@ -26,10 +26,10 @@ component accessors="true" output="false" {
 
 	// define default variables for component
 	variables.graphBaseURL = "https://graph.facebook.com";
-	variables.scope = "email,publish_actions,user_birthday,friends_birthday,user_location,friends_location,user_status,friends_status,user_website,friends_website";
-	variables.timeout = 20;
-	variables.pictureType = 'square';  // square(50x50)|small(50xheight)|normal(100xheight)|large(200xHeight)
-	variables.returnFormat = "struct";
+  variables.scope = "email,publish_actions,user_birthday,friends_birthday,user_location,friends_location,user_status,friends_status,user_website,friends_website,read_friendlists,read_stream";
+  variables.timeout = 20;
+  variables.pictureType = 'square';  // square(50x50)|small(50xheight)|normal(100xheight)|large(200xHeight)
+  variables.returnFormat = "struct";
 	
 
 	/**
@@ -111,57 +111,122 @@ component accessors="true" output="false" {
     public any function invokeAPIService(required string service, required string token, required struct args) {
 
     	// create all available services
-      	switch (arguments.service) {
+        switch (arguments.service) {
 
-      		// get my profile data
-	        case "getMe":  
-	          st.method = "GET";   
-	          st.url="/me"; 
-	          st.customVal=[]; 
+        /* FQL API */
+          case "getFQL":
+
+            /* helpful FQL examples at - http://steve.veerman.ca/2012/facebook-api-fql-tutorial/ */
+
+            // set the appropriate FQL string based on the fql argument
+            switch (args.fql) {
+              
+              case "getMe":
+                args.fql = 'SELECT uid, name, pic_square, email, username, about_me, age_range, activities, birthday, can_post, contact_email, current_location, devices, education, friend_count 
+                            FROM user 
+                            WHERE uid = me()';
+                break;
+
+              case "getLike":
+                args.fql = 'SELECT user_id, object_id, post_id, object_type FROM like WHERE user_id = me()';
+                break;
+
+              case "getGroupLike":
+                args.fql = 'SELECT user_id, object_id, post_id, object_type FROM like WHERE object_type = "group" AND user_id = me()';
+                break;
+
+              case "getLinkLike":
+                args.fql = 'SELECT url FROM url_like WHERE user_id = me()';
+                break;
+
+              case "getStreamList":
+                args.fql = 'SELECT name, type, value, filter_key FROM stream_filter WHERE uid = me()';
+                break;
+
+              case "getStream":
+                args.fql = 'SELECT post_id, viewer_id, app_id, source_id, updated_time, created_time, filter_key, attribution, actor_id, target_id, message, app_data, action_links, attachment, impressions, comments, like_info, likes, privacy, permalink, xid, tagged_ids, message_tags, description, description_tags 
+                            FROM stream 
+                            WHERE source_id = me() 
+                              AND created_time >= "#args.since#"';
+                break;
+
+              case "getNewsfeed":
+                args.fql = 'SELECT post_id, app_id, source_id, updated_time, filter_key, attribution, message, action_links, likes, permalink 
+                            FROM stream 
+                            WHERE filter_key IN (SELECT filter_key FROM stream_filter WHERE uid = me() AND type = "newsfeed")
+                              AND created_time >= "#args.since#"';
+                break;
+
+              case "getStreamByApplicationID":
+                args.fql = 'SELECT post_id, actor_id, target_id, message 
+                            FROM stream 
+                            WHERE filter_key IN (SELECT filter_key FROM stream_filter WHERE uid = me()) 
+                              AND app_id = "#args.appID#"';
+                break;
+
+              case "getStreamByAttribution":
+                args.fql = 'SELECT post_id, viewer_id, app_id, source_id, updated_time, created_time, filter_key, attribution, actor_id, target_id, message, app_data, action_links, attachment, impressions, comments, likes, privacy, permalink, xid, tagged_ids, message_tags, description, description_tags 
+                            FROM stream 
+                            WHERE source_id = me() 
+                              AND attribution = "#args.attribution#"';
+                break;
+
+              case "getFriend":
+                args.fql = 'SELECT uid, name, pic_square, email, username, current_location, devices, friend_count
+                            FROM user 
+                            WHERE uid IN (SELECT uid2 FROM friend WHERE uid1 = me())
+                            ORDER BY last_name ASC';
+                break;
+
+              case "getFriendByID":
+                args.fql = 'SELECT uid, name, pic_square, email, username, current_location 
+                            FROM user 
+                            WHERE uid = #args.friendID#';
+                break;
+
+              case "getFriendWithApplication":
+                args.fql = 'SELECT uid, name, pic_square FROM user WHERE is_app_user AND uid IN (SELECT uid2 FROM friend WHERE uid1 = me())';
+                break;
+
+              case "getFriendStream":
+                args.fql = 'SELECT post_id, actor_id, message, updated_time, attribution FROM stream WHERE source_id = "#args.friendID#"';
+                break;
+
+              case "getPlace":
+                args.fql = 'SELECT page_id,name,latitude,longitude,checkin_count,display_subtext,description,pic,search_type,type 
+                            FROM place 
+                            WHERE distance(latitude, longitude, "#args.latitude#", "#args.longitude#") < #args.meters#';
+                break;
+
+              case "custom":
+                args.fql = args.customFQL;
+                break;
+
+              default:
+                // no fql is set which should trigger error in st.customVal[] check
+                break;
+
+
+            } // end argments.fql
+
+            st.method = "GET";
+            st.url = "/fql";
+            st.customVal=['fql:string']; 
+            st.customURL=['q:#args.fql#'];
+            
+            break;
+
+        /* USER FEED - things a user posts to Facebook */
+
+          // post to my feed
+          case "createFeed":  
+            st.method = "POST";   
+            st.url="/me/feed";   
+            st.customVal=[]; 
             st.customURL=[];
-	          break;
+            break;
 
-	        // get my picture
-	        case "getMePicture":  
-	          st.method = "GET";   
-	          st.url="/me";   
-	          st.customVal=[]; 
-            st.customURL=['fields:picture.type(#structKeyExists(args,'pictureType')?args.pictureType:variables.pictureType#)'];
-	          break;
-
-	        // get my feed
-	        case "getFeed":  
-	          st.method = "GET";   
-	          st.url="/me/feed";   
-	          st.customVal=[];
-            st.customURL=[]; 
-	          break;
-
-	        // post to my feed
-	        case "createFeed":  
-	          st.method = "POST";   
-	          st.url="/me/feed";   
-	          st.customVal=[]; 
-            st.customURL=[];
-	          break;
-
-          // get friends profiles
-	        case "getFriend":
-	          st.method="GET";
-	          st.url="/me/friends";
-	          st.customVal=[]; 
-            st.customURL=['fields:name,birthday,location,username,picture.type(#structKeyExists(args,'pictureType')?args.pictureType:variables.pictureType#)'];
-	          break;
-
-          // get a specific friend profile
-	        case "getFriendByID":
-	          st.method="GET";
-	          st.url="/me/friends/#structKeyExists(args,'friend')?args.friend:''#";
-	          st.customVal=['friend:string'];
-            st.customURL=['fields:birthday,location,username,picture.type(#structKeyExists(args,'pictureType')?args.pictureType:variables.pictureType#)']; 
-	          break;
-
-      	} // end switch
+        } // end switch
 
 
 /* VALIDATION CHECKS */

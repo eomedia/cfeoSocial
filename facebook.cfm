@@ -24,15 +24,25 @@
 		<cfdump var="#session#" label="fbToken exists">
 		<cfscript>
 
-			// GET INFO ON ME
-			dataOnMe = fbApp.invokeAPIService("getMe",session.fbToken,{});
-			writeDump(var=dataOnMe,label="API /getMe (data on user)");
+			/* FQL */
+			
+			// Get my profile using FQL
+			st = {};
+			st.fql = 'getMe'; 
+			getFQL = fbApp.invokeAPIService("getFQL",session.fbToken,st);
+			writeDump(var=getFQL,label="API /getFQL (fb fql)");
 			writeOutput("<hr>");
 
-			picOnMe = fbApp.invokeAPIService("getMePicture",session.fbToken,{});
-			//writeDump(picOnMe);
-			writeOutput('API /getMePicture <img src="#picOnMe.picture.data.url#">');
+			// Get custom FQL data (e.g. Friends birthdays sorted by month)
+			st = {};
+			st.fql = 'custom';
+			st.customFQL = 'SELECT first_name, last_name, birthday_date FROM user WHERE uid IN (SELECT uid2 FROM friend WHERE uid1 = me()) AND birthday_date ORDER BY birthday_date'; 
+			getFQL = fbApp.invokeAPIService("getFQL",session.fbToken,st);
+			writeDump(var=getFQL,label="API /customFQL (fb fql)");
+			writeOutput("<hr>");
 
+
+			/* GRAPH API */
 
 			// CREATE A FEED 
 			if (isDefined("url.feed")){
@@ -51,46 +61,5 @@
 				// writeDump(var=createFeed,label='create feed');
 			}
 			
-			// GET MY FEED INFO
-			getFeed = fbApp.invokeAPIService("getFeed",session.fbToken,{});
-			writeDump(var=getFeed,label="API /getFeed (feed on user)");
-			writeOutput("<hr>");
-
-
-			// GET A FRIEND BY ID
-			st = {};
-			st.friend = '100007615111111';  // use an ID for a friend
-			getFriendByID = fbApp.invokeAPIService("getFriendByID",session.fbToken,st);  // writeDump(getFriendByID);
-
-			//writeDump(getFriendByID);
-			if (isDefined("getFriendByID.data")){
-				arrayEach(getFriendByID.data, function(obj){
-					writeDump(var=obj,label="API /getFriendByID");
-					if (structKeyExists(obj, "picture")) {writeOutput('FriendByID PICTURE:  <img src="#obj.picture.data.url#">');}
-					//image = imageRead(obj.picture.data.url);
-					//imageScaleToFit(image, 100,100);
-					writeOutput("<hr>");
-				});
-			} else {
-				writeDump(var=getFriendByID,label="getFriendByID");
-			}
-				
-			
-
-			// GET ALL FRIENDS
-			getFriend = fbApp.invokeAPIService("getFriend",session.fbToken,{});
-			//writeDump(var=getFriend,label="API /getFriend (all)");
-			arrayEach(getFriend.data, function(obj){
-				// writeDump(obj);
-				writeOutput('<img src="#obj.picture.data.url#"> ');
-				writeOutput(obj.name);
-				writeOutput(' | <b>ID</b>: #obj.id#');
-				writeOutput(' | <b>b-day</b>: #structKeyExists(obj, "birthday")?obj.birthday:''#');
-				writeOutput(' | <b>location</b>: #structKeyExists(obj, "location")?obj.location.name:''#');
-				writeOutput(' | <b>email</b>: #structKeyExists(obj, "username")?obj.username:''#@facebook.com');
-				
-				writeOutput("<br>");
-				
-			});
 		</cfscript>
 	</cfif>
